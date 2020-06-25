@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>History of queries</title>
+    <style>
+        /* внешние границы таблицы серого цвета толщиной 1px */
+        table {
+            border: 1px solid grey;
+            width: 100%;
+        }
+
+        /* границы ячеек первого ряда таблицы */
+        th {
+            border: 1px solid grey;
+        }
+
+        /* границы ячеек тела таблицы */
+        td {
+            border: 1px solid #808080;
+        }
+    </style>
+</head>
+<body>
+<tr style="width: 100%">
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Animal type</th>
+            <th>Image name</th>
+            <th>Created</th>
+        </tr>
+        {% for record in history %}
+            <tr>
+                <th>{{ record.ID }}</th>
+                <th>{{ record.animal_type }}</th>
+                <th>{{ record.processed_image }}</th>
+                <th>{{ record.created }}</th>
+            </tr>
+        {% endfor %}
+
+    </table>
+
+    </div>
+</body>
+</html>

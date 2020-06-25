@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Greetings</title>
+</head>
+<body>
+<h1>Hello there!</h1>
+<a href='{{ url_for('cat_service') }}'>Cat page</a>
+<br/>
+<a href='{{ url_for('dog_service') }}'>Dog page</a>
+<br/>
+<a href='{{ url_for('fox_service') }}'>Fox page</a>
+<br/>
+<a href='{{ url_for('get_history') }}'>History</a>
+<br/>
+<a href='{{ url_for('get_history_uuid') }}'>Image by Uuid</a>
+</body>
+</html>
