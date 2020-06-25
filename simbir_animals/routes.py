@@ -1,7 +1,7 @@
 from flask import render_template
 
 from simbir_animals import app, db
-from simbir_animals.models import DBAnimal, Cat, Dog, Fox, DiskSaver, PillowEnhancer
+from simbir_animals.models import DBAnimal, Cat, Dog, Fox, DiskSaver, PillowEnhancer, FileSearcher
 
 # creating of service objects
 image_enhancer = PillowEnhancer()
@@ -23,7 +23,7 @@ def cat_service():
     After all actions with image record about event is recorded to database"""
 
     cat_image = Cat()
-    cat_image.get_image()
+    cat_image.get_image_alt()
     disk_saver.save_to_disk(cat_image)
     image_enhancer.enhance(cat_image.fullpath_to_file)
 
@@ -82,7 +82,8 @@ def get_history_uuid(uuid=None):
     """Function returns render of page with image by image name (uuid)"""
 
     if uuid:
-        image_path = '/static/' + uuid + '.jpg'
-        return render_template('static.html', image_path=image_path)
+        file_searcher = FileSearcher()
+        image_path = file_searcher.search_file(uuid)
+        return render_template('static.html', image_path='/static/' + image_path)
     else:
         return "Please enter uuid of image like this: /history/static/uuid"
