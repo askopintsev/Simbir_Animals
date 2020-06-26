@@ -15,7 +15,7 @@ def hello_world():
     return render_template('index.html')
 
 
-@app.route('/animals/cat', methods=['GET'])
+@app.route('/animal/cat', methods=['GET'])
 def cat_service():
     """Function returns render of page with random cat image.
     Before render all image logic is happening: object creation,
@@ -38,7 +38,7 @@ def cat_service():
     return render_template('cat.html', content='/static/' + cat_image.processed_image)
 
 
-@app.route('/animals/dog', methods=['GET'])
+@app.route('/animal/dog', methods=['GET'])
 def dog_service():
     """Function returns render of page with random dog image.
     Before render all image logic is happening: object creation,
@@ -60,7 +60,7 @@ def dog_service():
     return render_template('dog.html', content='/static/' + dog_image.processed_image)
 
 
-@app.route('/animals/fox', methods=['GET'])
+@app.route('/animal/fox', methods=['GET'])
 def fox_service():
     """Function returns render of page with random fox image.
     Before render all image logic is happening: object creation,
