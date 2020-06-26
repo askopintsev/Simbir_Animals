@@ -1,9 +1,11 @@
 from flask import render_template
 
 from simbir_animals import app, db
-from simbir_animals.models import DBAnimal, Cat, Dog, Fox, DiskWorker, PillowEnhancer
+from simbir_animals.models import DBAnimal, Cat, Fox
 
-# creating of service objects
+from simbir_animals.services import DogService
+from simbir_animals.utils import PillowEnhancer, DiskWorker
+
 image_enhancer = PillowEnhancer()
 disk_worker = DiskWorker()
 
@@ -29,7 +31,7 @@ def cat_service():
     else:
         cat_image.get_image(call_result)
 
-        disk_worker.save_to_disk(cat_image)
+        cat_image.fullpath_to_file = disk_worker.save_to_disk(cat_image.img_data, cat_image.processed_image)
         image_enhancer.enhance(cat_image.fullpath_to_file)
 
         db.session.add(cat_image)
@@ -44,20 +46,12 @@ def dog_service():
     Before render all image logic is happening: object creation,
     retrieving from Internet, saving to the directory and filter applying.
     After all actions with image record about event is recorded to database"""
+    try:
+        processed_image = DogService().process()
+    except Exception as error:
+        return str(error)
 
-    dog_image = Dog()
-    call_result = dog_image.call_to_service()  # check of service availability
-    if call_result == "Bad request":
-        return "Service unavailable now. Please try again later"
-    else:
-        dog_image.get_image(call_result)
-        disk_worker.save_to_disk(dog_image)
-        image_enhancer.enhance(dog_image.fullpath_to_file)
-
-        db.session.add(dog_image)
-        db.session.commit()
-
-    return render_template('dog.html', content='/static/' + dog_image.processed_image)
+    return render_template('dog.html', content='/static/' + processed_image)
 
 
 @app.route('/animals/fox', methods=['GET'])
@@ -73,7 +67,7 @@ def fox_service():
         return "Service unavailable now. Please try again later"
     else:
         fox_image.get_image(call_result)
-        disk_worker.save_to_disk(fox_image)
+        fox_image.fullpath_to_file = disk_worker.save_to_disk(fox_image.img_data, fox_image.processed_image)
         image_enhancer.enhance(fox_image.fullpath_to_file)
 
         db.session.add(fox_image)
