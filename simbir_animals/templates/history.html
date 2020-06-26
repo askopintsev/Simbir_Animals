@@ -4,18 +4,16 @@
     <meta charset="UTF-8">
     <title>History of queries</title>
     <style>
-        /* внешние границы таблицы серого цвета толщиной 1px */
+
         table {
             border: 1px solid grey;
             width: 100%;
         }
 
-        /* границы ячеек первого ряда таблицы */
         th {
-            border: 1px solid grey;
+            border: 1px solid #808080;
         }
 
-        /* границы ячеек тела таблицы */
         td {
             border: 1px solid #808080;
         }
@@ -27,7 +25,7 @@
         <tr>
             <th>ID</th>
             <th>Animal type</th>
-            <th>Image name</th>
+            <th>Processed image</th>
             <th>Created</th>
         </tr>
         {% for record in history %}

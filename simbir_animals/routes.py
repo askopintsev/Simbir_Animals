@@ -1,11 +1,11 @@
 from flask import render_template
 
 from simbir_animals import app, db
-from simbir_animals.models import DBAnimal, Cat, Dog, Fox, DiskSaver, PillowEnhancer, FileSearcher
+from simbir_animals.models import DBAnimal, Cat, Dog, Fox, DiskWorker, PillowEnhancer
 
 # creating of service objects
 image_enhancer = PillowEnhancer()
-disk_saver = DiskSaver()
+disk_worker = DiskWorker()
 
 
 @app.route('/', methods=['GET'])
@@ -23,12 +23,17 @@ def cat_service():
     After all actions with image record about event is recorded to database"""
 
     cat_image = Cat()
-    cat_image.get_image_alt()
-    disk_saver.save_to_disk(cat_image)
-    image_enhancer.enhance(cat_image.fullpath_to_file)
+    call_result = cat_image.call_to_service()  # check of service availability
+    if call_result == "Bad request":
+        return "Service unavailable now. Please try again later"
+    else:
+        cat_image.get_image(call_result)
 
-    db.session.add(cat_image)
-    db.session.commit()
+        disk_worker.save_to_disk(cat_image)
+        image_enhancer.enhance(cat_image.fullpath_to_file)
+
+        db.session.add(cat_image)
+        db.session.commit()
 
     return render_template('cat.html', content='/static/' + cat_image.processed_image)
 
@@ -41,12 +46,16 @@ def dog_service():
     After all actions with image record about event is recorded to database"""
 
     dog_image = Dog()
-    dog_image.get_image()
-    disk_saver.save_to_disk(dog_image)
-    image_enhancer.enhance(dog_image.fullpath_to_file)
+    call_result = dog_image.call_to_service()  # check of service availability
+    if call_result == "Bad request":
+        return "Service unavailable now. Please try again later"
+    else:
+        dog_image.get_image(call_result)
+        disk_worker.save_to_disk(dog_image)
+        image_enhancer.enhance(dog_image.fullpath_to_file)
 
-    db.session.add(dog_image)
-    db.session.commit()
+        db.session.add(dog_image)
+        db.session.commit()
 
     return render_template('dog.html', content='/static/' + dog_image.processed_image)
 
@@ -59,12 +68,16 @@ def fox_service():
     After all actions with image record about event is recorded to database"""
 
     fox_image = Fox()
-    fox_image.get_image()
-    disk_saver.save_to_disk(fox_image)
-    image_enhancer.enhance(fox_image.fullpath_to_file)
+    call_result = fox_image.call_to_service()  # check of service availability
+    if call_result == "Bad request":
+        return "Service unavailable now. Please try again later"
+    else:
+        fox_image.get_image(call_result)
+        disk_worker.save_to_disk(fox_image)
+        image_enhancer.enhance(fox_image.fullpath_to_file)
 
-    db.session.add(fox_image)
-    db.session.commit()
+        db.session.add(fox_image)
+        db.session.commit()
 
     return render_template('fox.html', content='/static/' + fox_image.processed_image)
 
@@ -73,7 +86,8 @@ def fox_service():
 def get_history():
     """Function returns render of page with history about image queries from database"""
 
-    return render_template('history.html', history=DBAnimal.query.all())
+    history = DBAnimal.query.all()
+    return render_template('history.html', history=history)
 
 
 @app.route('/history/static/', methods=['GET'])
@@ -82,8 +96,9 @@ def get_history_uuid(uuid=None):
     """Function returns render of page with image by image name (uuid)"""
 
     if uuid:
-        file_searcher = FileSearcher()
-        image_path = file_searcher.search_file(uuid)
+        image_path = disk_worker.search_file(uuid)
+        if image_path == 'Not found':
+            return "Can't find image with given uuid. Please check uuid and try again"
         return render_template('static.html', image_path='/static/' + image_path)
     else:
-        return "Please enter uuid of image like this: /history/static/uuid"
+        return "Please enter uuid of image like this (file extension not allowed): /history/static/uuid"
