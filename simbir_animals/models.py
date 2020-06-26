@@ -1,7 +1,7 @@
-from datetime import datetime
 import os
 import random
 import uuid
+from datetime import datetime
 
 import requests
 from PIL import Image, ImageFilter
@@ -21,12 +21,27 @@ class DBAnimal(db.Model):
     created = db.Column(db.DateTime(), default=datetime.utcnow)
 
     def __init__(self, animal_type):
-        """Initialisation of parent class and basic attributes for children"""
+        """Initialisation of parent class and basic attributes for children.
+        Gets the value of child class name as animal_type value"""
 
         self.animal_type = animal_type
-        self.processed_image = str(uuid.uuid4()) + '.jpg'  # Here the name of image is generating
         self.img_data = None
         self.fullpath_to_file = None
+        # Here the uuid name of image is generating without file extension
+        # (extension will be added in get_image())
+        self.processed_image = str(uuid.uuid4())
+
+    def call_to_service(self):
+        """Function responsible for call to service which provides random animal image.
+        Function receives service URL and returns response object"""
+
+        response = requests.get(self.service_url)
+        if response.status_code == 200:
+            json_response = response.json()
+        else:
+            return "Bad request"
+
+        return json_response
 
 
 class Cat(DBAnimal):
@@ -43,14 +58,14 @@ class Cat(DBAnimal):
         self.service_url = 'http://aws.random.cat/meow'
         super().__init__(self.__class__.__name__)
 
-    def get_image(self):
+    def get_image(self, response):
         """Function downloads image from service using address stored in object service.
         Image is stored in self.img_data parameter as binary data"""
-        # TODO Exceptions on code value
-        response = requests.get(self.service_url)
-        code = response.status_code
-        json_response = response.json()
-        self.img_data = requests.get(json_response['file'])
+
+        image_response = requests.get(response['file'])
+        image_ext = image_response.headers['Content-Type'].split('/')[-1]
+        self.img_data = image_response.content
+        self.processed_image = self.processed_image + '.' + image_ext
 
 
 class Dog(DBAnimal):
@@ -67,13 +82,14 @@ class Dog(DBAnimal):
         self.service_url = 'http://shibe.online/api/shibes'
         super().__init__(self.__class__.__name__)
 
-    def get_image(self):
+    def get_image(self, response):
         """Function downloads image from service using address stored in object service.
         Image is stored in self.img_data parameter as binary data"""
 
-        response = requests.get(self.service_url)
-        json_response = response.json()
-        self.img_data = requests.get(json_response[0])
+        image_response = requests.get(response[0])
+        image_ext = image_response.headers['Content-Type'].split('/')[-1]
+        self.img_data = image_response.content
+        self.processed_image = self.processed_image + '.' + image_ext
 
 
 class Fox(DBAnimal):
@@ -90,35 +106,43 @@ class Fox(DBAnimal):
         self.service_url = 'https://randomfox.ca/floof/'
         super().__init__(self.__class__.__name__)
 
-    def get_image(self):
+    def get_image(self, response):
         """Function downloads image from service using address stored in object service.
         Image is stored in self.img_data parameter as binary data"""
 
-        response = requests.get(self.service_url)
-        json_response = response.json()
-        self.img_data = requests.get(json_response['image'])
+        image_response = requests.get(response['image'])
+        image_ext = image_response.headers['Content-Type'].split('/')[-1]
+        self.img_data = image_response.content
+        self.processed_image = self.processed_image + '.' + image_ext
 
 
-class DiskSaver:
-    """Class performs saving of the random image of animal to local directory"""
+class DiskWorker:
+    """Class performs saving of the random image to local directory
+    and search of image by given uuid"""
 
-    @staticmethod
-    def save_to_disk(obj):
+    def __init__(self):
+        self.path = os.getcwd() + "/simbir_animals/static/"
+
+    def save_to_disk(self, obj):
         """Function receives an object of random image,
          defines path to local directory 'static' and set it to object,
          and serialises the object to image file"""
 
-        path_of_app = os.getcwd()
-        path_to_static = "/simbir_animals/static/"
-        # absolute_path = os.path.dirname(os.path.abspath(__file__)) + '/static/'
-        obj.fullpath_to_file = path_of_app + path_to_static + obj.processed_image
+        obj.fullpath_to_file = self.path + obj.processed_image
 
-        if not os.path.exists(path_of_app + path_to_static):
-            os.makedirs(path_of_app + path_to_static)
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
 
         with open(obj.fullpath_to_file, 'wb') as file:
-            for part in obj.img_data.iter_content(512):
-                file.write(part)
+            file.write(obj.img_data)
+
+    def search_file(self, uuid):
+        """Function receives image uuid and scan static directory for match"""
+
+        for file in os.listdir(self.path):
+            if os.path.isfile(os.path.join(self.path, file)) and file.split('.')[0] == uuid:
+                return file
+        return "Not found"
 
 
 class PillowEnhancer:
